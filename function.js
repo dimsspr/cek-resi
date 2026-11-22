@@ -2,6 +2,16 @@ import ManualJS from "./manual.js";
 import axios from "axios";
 import * as cheerio from "cheerio";
 
+const detectCourier = (number) => {
+  const n = String(number || "").trim().toUpperCase();
+  if (n.startsWith("SPX")) return "SPX";
+  if (n.startsWith("CM") || n.startsWith("TLJR") || n.startsWith("SOCAG")) return "JNE";
+  if (n.startsWith("ID") || n.startsWith("IDS")) return "IDE";
+  if (n.startsWith("NLID") || n.startsWith("NJV")) return "NINJA";
+  if (n.startsWith("1000")) return "ANTERAJA";
+  return "JET";
+};
+
 const encryptTimers = (number) =>
   new Promise((resolve, reject) => {
     const result = ManualJS.MDX.goinstring(
@@ -13,9 +23,9 @@ const encryptTimers = (number) =>
   });
 
 const getCSRFData = async (number) => {
+  const courier = detectCourier(number);
   const response = await axios.get(
-    `https://cekresi.com/?noresi=${number}&e=JET`,
-    {
+    `https://cekresi.com/?noresi=${encodeURIComponent(number)}&e=${courier}`,    {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -72,7 +82,8 @@ const scrapeResiData = (html) => {
 const getResiTracking = (number, csrf, timers) =>
   new Promise(async (resolve, reject) => {
     try {
-      const postData = `viewstate=${csrf.viewstate}&secret_key=${csrf.secret_key}&e=JET&noresi=${number}&timers=${timers}`;
+      const courier = detectCourier(number);
+      const postData = `viewstate=${encodeURIComponent(csrf.viewstate || "")}&secret_key=${encodeURIComponent(csrf.secret_key || "")}&e=${courier}&noresi=${encodeURIComponent(number)}&timers=${timers}`;
       const getResponse = await axios.post(
         `https://apa2.cekresi.com/cekresi/resi/initialize.php?ui=dad9643acec71f85853608db54345ada&p=1&w=chfj6h`,
         postData,
@@ -86,7 +97,6 @@ const getResiTracking = (number, csrf, timers) =>
             "Accept-Language": "id,en-US;q=0.7,en;q=0.3",
             "Accept-Encoding": "gzip, deflate",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Content-Length": "124",
             Origin: "https://cekresi.com",
             Referer: "https://cekresi.com/",
             "Cache-Control": "max-age=0",
