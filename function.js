@@ -5,10 +5,12 @@ import * as cheerio from "cheerio";
 const detectCourier = (number) => {
   const n = String(number || "").trim().toUpperCase();
   if (n.startsWith("SPX")) return "SPX";
-  if (n.startsWith("CM") || n.startsWith("TLJR") || n.startsWith("SOCAG")) return "JNE";
+  if (n.startsWith("004") || /^00\d{10}$/.test(n)) return "SICEPAT";
+  if (n.startsWith("110") || /^100\d{11}$/.test(n) || n.startsWith("1000")) return "ANTERAJA";
+  if (n.startsWith("CM") || n.startsWith("TLJR") || n.startsWith("SOCAG") || n.startsWith("JP")) return "JNE";
   if (n.startsWith("ID") || n.startsWith("IDS")) return "IDE";
   if (n.startsWith("NLID") || n.startsWith("NJV")) return "NINJA";
-  if (n.startsWith("1000")) return "ANTERAJA";
+  if (n.startsWith("JX") || n.startsWith("JT")) return "JET";
   return "JET";
 };
 
